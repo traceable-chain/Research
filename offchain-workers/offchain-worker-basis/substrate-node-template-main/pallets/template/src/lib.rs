@@ -175,6 +175,44 @@ pub mod pallet {
 	#[pallet::getter(fn prices)]
 	pub(super) type Prices<T: Config> = StorageValue<_, BoundedVec<u32, T::MaxPrices>, ValueQuery>;
 
+	pub(super) type SensorIdOf = u32;
+	pub(super) type SensorTypeOf = Vec<u8>;
+
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	pub enum SensorType {
+		Humidity,
+		Temperature,
+		Pressure,
+		Digital
+	}
+	
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	pub struct Geolocation {
+		lat: u32,
+		lon: u32
+	}
+	
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	pub enum SensorValue {
+		Float(u32),
+		Percentage(u8),
+		On(bool)
+	}
+	
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	pub struct SensorData {
+		id: u32,
+		type_: SensorType,
+		geolocation: Geolocation,
+		value: SensorValue,
+		timestamp: u64
+	}
+
+	/// A double storage map with the sensors data.
+	#[pallet::storage]
+	#[pallet::getter(fn sensors)]
+	pub(super) type Sensors<T: Config> = StorageDoubleMap<_, Blake2_128Concat, SensorIdOf, Blake2_128Concat, SensorTypeOf, SensorData, OptionQuery>;
+
 	/// Authorities allowed to submit the price.
 	#[pallet::storage]
 	#[pallet::getter(fn authorities)]
