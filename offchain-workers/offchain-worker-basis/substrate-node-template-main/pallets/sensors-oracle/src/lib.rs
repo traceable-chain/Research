@@ -86,7 +86,7 @@ mod tests;
 /// When offchain worker is signing transactions it's going to request keys of type `KeyTypeId` from
 /// the keystore and use the ones it finds to sign the transaction. The keys can be inserted
 /// manually via RPC (see `author_insertKey`).
-pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"SensorsOracle");
+pub const KEY_TYPE: KeyTypeId = KeyTypeId(*b"sens");
 
 /// Based on the above `KeyTypeId` we need to generate a pallet-specific crypto type wrappers. We
 /// can use from supported crypto kinds (`sr25519`, `ed25519` and `ecdsa`) and augment the types
@@ -232,7 +232,7 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		fn offchain_worker(block_number: BlockNumberFor<T>) {
-			match Self::update_sensors_data() {
+			match Self::get_sensors_data() {
 				Ok(_) => log::info!("Sensors data updated..."),
 				Err(()) => log::error!("Failed to update sensors data..."),
 			}
@@ -243,7 +243,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		
-		#[pallet::call_index(1000)]
+		#[pallet::call_index(0)]
 		pub fn update_sensors_data(origin: OriginFor<T>, updated_data: Vec<SensorData>) -> DispatchResultWithPostInfo {
 			// Retrieve sender of the transaction.
 			let who = ensure_signed(origin)?;

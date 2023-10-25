@@ -50,6 +50,9 @@ pub use sp_runtime::{Perbill, Permill};
 /// Import the template pallet.
 pub use pallet_template;
 
+/// Import the sensors oracle pallet.
+pub use sensors_oracle;
+
 /// An index to a block.
 pub type BlockNumber = u32;
 
@@ -304,6 +307,16 @@ impl pallet_template::Config for Runtime {
 
 }
 
+/// Configure the pallet-template in pallets/template.
+impl sensors_oracle::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type AuthorityId = sensors_oracle::crypto::TestAuthId;
+	type GracePeriod = ConstU32<5>;
+	type MaxPrices = ConstU32<64>;
+	type MaxAuthorities = ConstU32<32>;
+
+}
+
 use codec::Encode;
 use sp_runtime::{generic::Era, SaturatedConversion};
 
@@ -377,6 +390,7 @@ construct_runtime!(
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template,
 		Nicks: pallet_nicks,
+		SensorsOracle: sensors_oracle,
 	}
 );
 
