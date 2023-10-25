@@ -75,6 +75,11 @@ use sp_runtime::offchain::{
 };
 use sp_std::vec::Vec;
 
+use serde::{Deserialize, Deserializer, Serialize};
+
+#[cfg(feature = "std")]
+use serde::Serializer;
+
 #[cfg(test)]
 mod tests;
 
@@ -178,7 +183,7 @@ pub mod pallet {
 	pub(super) type SensorIdOf = u32;
 	pub(super) type SensorTypeOf = Vec<u8>;
 
-	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub enum SensorType {
 		Humidity,
 		Temperature,
@@ -186,32 +191,32 @@ pub mod pallet {
 		Digital
 	}
 	
-	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub struct Geolocation {
-		lat: u32,
-		lon: u32
+		pub lat: u32,
+		pub lon: u32
 	}
 	
-	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub enum SensorValue {
 		Float(u32),
 		Percentage(u8),
 		On(bool)
 	}
 	
-	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub struct SensorData {
-		id: u32,
-		type_: SensorType,
-		geolocation: Geolocation,
-		value: SensorValue,
-		timestamp: u64
+		pub id: u32,
+		pub type_: SensorType,
+		pub geolocation: Geolocation,
+		pub value: SensorValue,
+		pub timestamp: u64
 	}
 
 	/// A double storage map with the sensors data.
 	#[pallet::storage]
 	#[pallet::getter(fn sensors)]
-	pub(super) type Sensors<T: Config> = StorageDoubleMap<_, Blake2_128Concat, SensorIdOf, Blake2_128Concat, SensorTypeOf, SensorData, OptionQuery>;
+	pub(super) type Sensors<T: Config> = StorageDoubleMap<_, Blake2_128Concat, SensorIdOf, Blake2_128Concat, SensorType, SensorData, OptionQuery>;
 
 	/// Authorities allowed to submit the price.
 	#[pallet::storage]
@@ -224,6 +229,8 @@ pub mod pallet {
 		NotAuthority,
 		AlreadyAuthority,
 		TooManyAuthorities,
+		DeserializeError,
+		FailedSignedTransaction,
 	}
 
 	#[pallet::pallet]
@@ -234,7 +241,7 @@ pub mod pallet {
 		fn offchain_worker(block_number: BlockNumberFor<T>) {
 			match Self::get_sensors_data() {
 				Ok(_) => log::info!("Sensors data updated..."),
-				Err(()) => log::error!("Failed to update sensors data..."),
+				Err(_) => log::error!("Failed to update sensors data..."),
 			}
 		}
 	}
@@ -361,7 +368,15 @@ impl<T: Config> Pallet<T> {
 		// control the deadline.
 		let body = response.body().collect::<Vec<u8>>();
 
-		let sensors_data: Vec<SensorData> = serde_json::from_slice(&body).map_err(|_| <Error<T>>::DeserializeError)?;
+		// Create a str slice from the body.
+		let body_str = sp_std::str::from_utf8(&body).map_err(|_| {
+			log::warn!("No UTF8 body");
+			http::Error::Unknown
+		})?;
+
+		log::info!("\n\n\n\nBody: {:?}\n\n\n\n", body_str);
+
+		let sensors_data: Vec<SensorData> = serde_json::from_slice(&body).map_err(|_| http::Error::DeadlineReached)?;
 
 		log::info!("Sensors Data: {:?}", sensors_data.clone());
 
@@ -377,10 +392,18 @@ impl<T: Config> Pallet<T> {
 						updated_data: sensors_data.clone(),
 					}
 				})
-				.ok_or(<Error<T>>::FailedSignedTransaction)?
+				.ok_or(http::Error::DeadlineReached)?
 				.1
-				.map_err(|_| <Error<T>>::FailedSignedTransaction)?;
+				.map_err(|_| http::Error::DeadlineReached)?;
 
 		Ok(sensors_data)
+	}
+
+	fn add_sensor_data(sensor: SensorData) {
+		let sensor_data = sensor.clone();
+		let id = sensor_data.id;
+		let type_ = sensor_data.type_;
+		// <Sensors<T>>::insert(&sensor.id, &sensor.type_, sensor)
+		<Sensors<T>>::insert(id, type_, sensor)
 	}
 }

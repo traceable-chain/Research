@@ -29,6 +29,16 @@ sp-runtime = { version = "24.0.0", default-features = false, git = "https://gith
 sp-std = { version = "8.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 log = { version = "0.4.17", default-features = false }
 
+[dependencies.serde]
+version = '1.0.130'
+default-features = false
+features = ['derive']
+
+[dependencies.serde_json]
+version = '1.0.67'
+default-features = false
+features = ['alloc']
+
 [features]
 default = ["std"]
 std = [
