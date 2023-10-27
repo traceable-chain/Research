@@ -298,7 +298,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		
 		#[pallet::call_index(0)]
-		#[pallet::weight(0)]
+		#[pallet::weight((0, Pays::No))]
 		pub fn update_sensors_data(origin: OriginFor<T>, updated_data: Vec<SensorData>) -> DispatchResultWithPostInfo {
 			// Retrieve sender of the transaction.
 			let who = ensure_signed(origin)?;
