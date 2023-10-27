@@ -185,10 +185,10 @@ pub mod pallet {
 
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub enum SensorType {
-		Humidity,
-		Temperature,
-		Pressure,
-		Digital
+		Humidity = 0,
+		Temperature = 1,
+		Pressure = 2,
+		Digital = 3
 	}
 	
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
@@ -199,16 +199,63 @@ pub mod pallet {
 	
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub enum SensorValue {
-		Float(u32),
-		Percentage(u8),
-		On(bool)
+		Number(u32),
+		Bool(bool)
+	}
+
+	fn de_string_to_sensor_type<'de, D>(de: D) -> Result<SensorType, D::Error>
+	where
+	    D: Deserializer<'de>,
+	{
+		let s: &str = Deserialize::deserialize(de)?;
+		match s {
+			"Humidity" => Ok(SensorType::Humidity),
+			"Pressure" => Ok(SensorType::Pressure),
+			"Temperature" => Ok(SensorType::Temperature),
+			"Digital" => Ok(SensorType::Digital),
+			_ => Ok(SensorType::Digital)
+		}
+	}
+
+	fn de_string_to_geolocation<'de, D>(de: D) -> Result<Geolocation, D::Error>
+	where
+	    D: Deserializer<'de>,
+	{
+		let s: Geolocation = Deserialize::deserialize(de)?;
+		// let geolocation: Geolocation = serde_json::from_slice(&s).map_err(|e| {
+		// 	log::info!("\n\n\n ERROR: {:?}\n\n\n", e);
+		// 	Ok(Geolocation {lat: 0, lon: 0})
+		// })?;
+		// geolocation
+		Ok(s)
+	}
+
+	fn de_string_to_sensor_value<'de, D>(de: D) -> Result<SensorValue, D::Error>
+	where
+	    D: Deserializer<'de>,
+	{
+		let s: &str = Deserialize::deserialize(de)?;
+		match s {
+			"true" => Ok(SensorValue::Bool(true)),
+			"false" => Ok(SensorValue::Bool(false)),
+			value => {
+				match value.parse::<u32>() {
+					Ok(x) => Ok(SensorValue::Number(x)),
+					_ => Ok(SensorValue::Number(0))
+				}
+			}
+			_ => Ok(SensorValue::Number(0))
+		}
 	}
 	
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Serialize, Deserialize)]
 	pub struct SensorData {
 		pub id: u32,
+		#[serde(deserialize_with = "de_string_to_sensor_type")]
 		pub type_: SensorType,
+		#[serde(deserialize_with = "de_string_to_geolocation")]
 		pub geolocation: Geolocation,
+		#[serde(deserialize_with = "de_string_to_sensor_value")]
 		pub value: SensorValue,
 		pub timestamp: u64
 	}
@@ -251,6 +298,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		
 		#[pallet::call_index(0)]
+		#[pallet::weight(0)]
 		pub fn update_sensors_data(origin: OriginFor<T>, updated_data: Vec<SensorData>) -> DispatchResultWithPostInfo {
 			// Retrieve sender of the transaction.
 			let who = ensure_signed(origin)?;
@@ -376,7 +424,10 @@ impl<T: Config> Pallet<T> {
 
 		log::info!("\n\n\n\nBody: {:?}\n\n\n\n", body_str);
 
-		let sensors_data: Vec<SensorData> = serde_json::from_slice(&body).map_err(|_| http::Error::DeadlineReached)?;
+		let sensors_data: Vec<SensorData> = serde_json::from_slice(&body).map_err(|e| {
+			log::info!("\n\n\n ERROR: {:?}\n\n\n", e);
+			http::Error::DeadlineReached
+		})?;
 
 		log::info!("Sensors Data: {:?}", sensors_data.clone());
 
@@ -386,9 +437,6 @@ impl<T: Config> Pallet<T> {
 				.send_signed_transaction(|account| {
 					log::info!("Account, {:?}, {:?}", account.id, account.public);
 					Call::<T>::update_sensors_data {
-						// `prices` are not `move`d because of Fn(_)
-						// `prices` would have `move`d if FnOnce(_) was in signature
-						// Hence the redundant clone.
 						updated_data: sensors_data.clone(),
 					}
 				})
