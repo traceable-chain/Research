@@ -301,7 +301,7 @@ impl pallet_sudo::Config for Runtime {
 impl pallet_template::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type AuthorityId = pallet_template::crypto::TestAuthId;
-	type GracePeriod = ConstU32<5>;
+	type GracePeriod = ConstU32<1>;
 	type MaxPrices = ConstU32<64>;
 	type MaxAuthorities = ConstU32<32>;
 
@@ -311,7 +311,7 @@ impl pallet_template::Config for Runtime {
 impl sensors_oracle::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type AuthorityId = sensors_oracle::crypto::TestAuthId;
-	type GracePeriod = ConstU32<5>;
+	type GracePeriod = ConstU32<1>;
 	type MaxPrices = ConstU32<64>;
 	type MaxAuthorities = ConstU32<32>;
 
