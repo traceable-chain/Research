@@ -489,8 +489,6 @@ impl<T: Config> Pallet<T> {
             http::Error::Unknown
         })?;
 
-        log::info!("Sensors Data: {:?}", sensors_data.clone());
-
         let signer = Signer::<T, T::AuthorityId>::any_account();
 
         signer
@@ -502,7 +500,7 @@ impl<T: Config> Pallet<T> {
             })
             .ok_or(http::Error::DeadlineReached)?
             .1
-            .map_err(|_| http::Error::DeadlineReached)?;
+            .map_err(|_| http::Error::Unknown)?;
 
         Ok(sensors_data)
     }
