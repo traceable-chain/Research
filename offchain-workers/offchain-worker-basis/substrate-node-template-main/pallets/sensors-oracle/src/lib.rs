@@ -176,6 +176,8 @@ pub mod pallet {
         AuthorityAdded { authority: T::AccountId },
         /// Event generated when an authority is removed.
         AuthorityRemoved { authority: T::AccountId },
+        ///
+        SensorDataAdded { id: u32, type_: SensorType },
     }
 
     /// A vector of recently submitted prices.
@@ -473,6 +475,7 @@ impl<T: Config> Pallet<T> {
         let response = pending
             .try_wait(deadline)
             .map_err(|_| http::Error::DeadlineReached)??;
+
         // Let's check the status code before we proceed to reading the response.
         if response.code != 200 {
             log::warn!("Unexpected status code: {}", response.code);
@@ -508,6 +511,7 @@ impl<T: Config> Pallet<T> {
     fn add_sensor_data(sensor: SensorData) {
         let id = sensor.id;
         let type_ = sensor.type_;
-        <Sensors<T>>::insert(id, type_, sensor)
+        <Sensors<T>>::insert(id, type_, sensor);
+        Self::deposit_event(Event::SensorDataAdded { id, type_ })
     }
 }
