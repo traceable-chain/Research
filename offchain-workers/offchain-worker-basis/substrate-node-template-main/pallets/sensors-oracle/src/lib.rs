@@ -129,9 +129,11 @@ pub use pallet::*;
 #[frame_support::pallet(dev_mode)]
 pub mod pallet {
     use super::*;
+    use core::fmt;
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
-
+    use serde::de::Error as SerdeError;
+    use serde_json::error;
     /// This pallet's configuration trait
     #[pallet::config(with_default)]
     pub trait Config: CreateSignedTransaction<Call<Self>> + frame_system::Config {
@@ -251,7 +253,7 @@ pub mod pallet {
             "Pressure" => Ok(SensorType::Pressure),
             "Temperature" => Ok(SensorType::Temperature),
             "Digital" => Ok(SensorType::Digital),
-            _ => Ok(SensorType::Digital),
+            _ => Err(D::Error::custom("Unexpected sensor type")),
         }
     }
 
@@ -278,9 +280,10 @@ pub mod pallet {
             "false" => Ok(SensorValue::Bool(false)),
             value => match value.parse::<u32>() {
                 Ok(x) => Ok(SensorValue::Number(x)),
+                // TODO: check later if this should be zero or not
                 _ => Ok(SensorValue::Number(0)),
             },
-            _ => Ok(SensorValue::Number(0)),
+            _ => Err(D::Error::custom("Unexpected sensor value")),
         }
     }
 
