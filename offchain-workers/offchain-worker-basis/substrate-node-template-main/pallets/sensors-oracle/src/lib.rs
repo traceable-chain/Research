@@ -184,7 +184,6 @@ pub mod pallet {
     pub(super) type Prices<T: Config> = StorageValue<_, BoundedVec<u32, T::MaxPrices>, ValueQuery>;
 
     pub(super) type SensorIdOf = u32;
-    pub(super) type SensorTypeOf = Vec<u8>;
 
     #[derive(
         Clone,
