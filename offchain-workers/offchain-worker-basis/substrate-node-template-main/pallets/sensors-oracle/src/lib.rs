@@ -484,17 +484,9 @@ impl<T: Config> Pallet<T> {
         // control the deadline.
         let body = response.body().collect::<Vec<u8>>();
 
-        // Create a str slice from the body.
-        let body_str = sp_std::str::from_utf8(&body).map_err(|_| {
-            log::warn!("No UTF8 body");
+        let sensors_data: Vec<SensorData> = serde_json::from_slice(&body).map_err(|_| {
+            log::warn!("No sensors data found");
             http::Error::Unknown
-        })?;
-
-        log::info!("\n\n\n\nBody: {:?}\n\n\n\n", body_str);
-
-        let sensors_data: Vec<SensorData> = serde_json::from_slice(&body).map_err(|e| {
-            log::info!("\n\n\n ERROR: {:?}\n\n\n", e);
-            http::Error::DeadlineReached
         })?;
 
         log::info!("Sensors Data: {:?}", sensors_data.clone());
