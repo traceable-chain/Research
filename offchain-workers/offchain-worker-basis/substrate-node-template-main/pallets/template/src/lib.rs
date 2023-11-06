@@ -44,7 +44,7 @@
 //!     "jsonrpc": "2.0",
 //!     "method": "author_insertKey",
 //!     "params": [
-//!	      "btc!",
+//! 	      "btc!",
 //!       "bread tongue spell stadium clean grief coin rent spend total practice document",
 //!       "0xb6a8b4b6bf796991065035093d3265e314c3fe89e75ccb623985e57b0c2e0c30"
 //!     ],
@@ -97,7 +97,7 @@ pub mod crypto {
 	use sp_runtime::{
 		app_crypto::{app_crypto, sr25519},
 		traits::Verify,
-		MultiSignature, MultiSigner
+		MultiSignature, MultiSigner,
 	};
 	app_crypto!(sr25519, KEY_TYPE);
 
@@ -183,35 +183,43 @@ pub mod pallet {
 		Humidity,
 		Temperature,
 		Pressure,
-		Digital
+		Digital,
 	}
-	
+
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 	pub struct Geolocation {
 		lat: u32,
-		lon: u32
+		lon: u32,
 	}
-	
+
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 	pub enum SensorValue {
 		Float(u32),
 		Percentage(u8),
-		On(bool)
+		On(bool),
 	}
-	
+
 	#[derive(Clone, Copy, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 	pub struct SensorData {
 		id: u32,
 		type_: SensorType,
 		geolocation: Geolocation,
 		value: SensorValue,
-		timestamp: u64
+		timestamp: u64,
 	}
 
 	/// A double storage map with the sensors data.
 	#[pallet::storage]
 	#[pallet::getter(fn sensors)]
-	pub(super) type Sensors<T: Config> = StorageDoubleMap<_, Blake2_128Concat, SensorIdOf, Blake2_128Concat, SensorTypeOf, SensorData, OptionQuery>;
+	pub(super) type Sensors<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		SensorIdOf,
+		Blake2_128Concat,
+		SensorTypeOf,
+		SensorData,
+		OptionQuery,
+	>;
 
 	/// Authorities allowed to submit the price.
 	#[pallet::storage]
@@ -293,11 +301,10 @@ pub mod pallet {
 			match res {
 				// The value has been set correctly, which means we can safely send a transaction
 				// now.
-				Ok(_) => {
+				Ok(_) =>
 					if let Err(e) = Self::fetch_price_and_send_signed() {
 						log::error!("Error: {}", e);
-					}
-				},
+					},
 				// We are in the grace period, we should not send a transaction this time.
 				Err(MutateStorageError::ValueFunctionFailed(())) => {
 					log::info!("Sent transaction too recently, waiting for grace period.")
