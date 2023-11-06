@@ -82,7 +82,6 @@ pub mod pallet {
 	use core::fmt;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use serde::de::Error as SerdeError;
 	use serde_json::error;
 
 	/// A double storage map with the sensors data.

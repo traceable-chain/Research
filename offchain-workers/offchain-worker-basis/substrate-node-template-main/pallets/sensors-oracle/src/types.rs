@@ -2,12 +2,11 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_system::{self as system, pallet_prelude::BlockNumberFor, Config};
 use frame_support::sp_runtime::RuntimeDebug;
 use scale_info::TypeInfo;
-
+use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[cfg(feature = "std")]
 use serde::Serializer;
-
 
 pub(super) type SensorIdOf = u32;
 
@@ -67,6 +66,30 @@ pub enum SensorValue {
     Bool(bool),
 }
 
+#[derive(
+    Clone,
+    Copy,
+    Encode,
+    Decode,
+    Eq,
+    PartialEq,
+    RuntimeDebug,
+    MaxEncodedLen,
+    TypeInfo,
+    Serialize,
+    Deserialize,
+)]
+pub struct SensorData {
+    pub id: u32,
+    #[serde(deserialize_with = "de_string_to_sensor_type")]
+    pub type_: SensorType,
+    #[serde(deserialize_with = "de_string_to_geolocation")]
+    pub geolocation: Geolocation,
+    #[serde(deserialize_with = "de_string_to_sensor_value")]
+    pub value: SensorValue,
+    pub timestamp: u64,
+}
+
 fn de_string_to_sensor_type<'de, D>(de: D) -> Result<SensorType, D::Error>
 where
     D: Deserializer<'de>,
@@ -77,7 +100,7 @@ where
         "Pressure" => Ok(SensorType::Pressure),
         "Temperature" => Ok(SensorType::Temperature),
         "Digital" => Ok(SensorType::Digital),
-        _ => Ok(SensorType::Digital),
+        _ => Err(SerdeError::custom("Error decoding sensor type.")),
     }
 }
 
@@ -107,30 +130,6 @@ where
             // TODO: check later if this should be zero or not
             _ => Ok(SensorValue::Number(0)),
         },
-        _ => Ok(SensorValue::Bool(false)),
+        _ => Err(SerdeError::custom("Error decoding sensor value.")),
     }
-}
-
-#[derive(
-    Clone,
-    Copy,
-    Encode,
-    Decode,
-    Eq,
-    PartialEq,
-    RuntimeDebug,
-    MaxEncodedLen,
-    TypeInfo,
-    Serialize,
-    Deserialize,
-)]
-pub struct SensorData {
-    pub id: u32,
-    #[serde(deserialize_with = "de_string_to_sensor_type")]
-    pub type_: SensorType,
-    #[serde(deserialize_with = "de_string_to_geolocation")]
-    pub geolocation: Geolocation,
-    #[serde(deserialize_with = "de_string_to_sensor_value")]
-    pub value: SensorValue,
-    pub timestamp: u64,
 }
