@@ -1,3 +1,14 @@
+use codec::{Decode, Encode, MaxEncodedLen};
+use frame_system::{self as system, pallet_prelude::BlockNumberFor, Config};
+use frame_support::sp_runtime::RuntimeDebug;
+use scale_info::TypeInfo;
+
+use serde::{Deserialize, Deserializer, Serialize};
+
+#[cfg(feature = "std")]
+use serde::Serializer;
+
+
 pub(super) type SensorIdOf = u32;
 
 #[derive(
@@ -66,7 +77,7 @@ where
         "Pressure" => Ok(SensorType::Pressure),
         "Temperature" => Ok(SensorType::Temperature),
         "Digital" => Ok(SensorType::Digital),
-        _ => Err(D::Error::custom("Unexpected sensor type")),
+        _ => Ok(SensorType::Digital),
     }
 }
 
@@ -96,7 +107,7 @@ where
             // TODO: check later if this should be zero or not
             _ => Ok(SensorValue::Number(0)),
         },
-        _ => Err(D::Error::custom("Unexpected sensor value")),
+        _ => Ok(SensorValue::Bool(false)),
     }
 }
 
@@ -122,32 +133,4 @@ pub struct SensorData {
     #[serde(deserialize_with = "de_string_to_sensor_value")]
     pub value: SensorValue,
     pub timestamp: u64,
-}
-
-/// A double storage map with the sensors data.
-#[pallet::storage]
-#[pallet::getter(fn sensors)]
-pub(super) type Sensors<T: Config> = StorageDoubleMap<
-    _,
-    Blake2_128Concat,
-    SensorIdOf,
-    Blake2_128Concat,
-    SensorType,
-    SensorData,
-    OptionQuery,
->;
-
-/// Authorities allowed to submit the price.
-#[pallet::storage]
-#[pallet::getter(fn authorities)]
-pub(super) type Authorities<T: Config> =
-    StorageValue<_, BoundedVec<T::AccountId, T::MaxAuthorities>, ValueQuery>;
-
-#[pallet::error]
-pub enum Error<T> {
-    NotAuthority,
-    AlreadyAuthority,
-    TooManyAuthorities,
-    DeserializeError,
-    FailedSignedTransaction,
 }

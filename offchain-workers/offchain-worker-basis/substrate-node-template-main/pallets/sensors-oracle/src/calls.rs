@@ -32,6 +32,7 @@ mod calls {
         }
 
         #[pallet::call_index(1)]
+        #[pallet::weight(0)]
         pub fn add_authority(
             origin: OriginFor<T>,
             authority: T::AccountId,
@@ -57,6 +58,7 @@ mod calls {
         }
 
         #[pallet::call_index(2)]
+        #[pallet::weight(0)]
         pub fn remove_authority(
             origin: OriginFor<T>,
             authority: T::AccountId,
