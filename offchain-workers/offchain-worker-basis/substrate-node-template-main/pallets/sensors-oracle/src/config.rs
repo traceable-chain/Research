@@ -3,7 +3,7 @@ use frame_support::pallet_macros::*;
 #[pallet_section]
 mod config {
 
-	#[pallet::config(with_default)]
+    #[pallet::config(with_default)]
     pub trait Config: CreateSignedTransaction<Call<Self>> + frame_system::Config {
         /// The identifier type for an offchain worker.
         #[pallet::no_default]
@@ -21,10 +21,6 @@ mod config {
         #[pallet::no_default]
         #[pallet::constant]
         type GracePeriod: Get<BlockNumberFor<Self>>;
-
-        /// Maximum number of prices.
-        #[pallet::constant]
-        type MaxPrices: Get<u32>;
 
         /// Maximum number of authorities.
         #[pallet::constant]
