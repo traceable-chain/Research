@@ -1,6 +1,6 @@
 use codec::{Decode, Encode, MaxEncodedLen};
-use frame_system::{self as system, pallet_prelude::BlockNumberFor, Config};
 use frame_support::sp_runtime::RuntimeDebug;
+use frame_system::{self as system, pallet_prelude::BlockNumberFor, Config};
 use scale_info::TypeInfo;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -109,11 +109,6 @@ where
     D: Deserializer<'de>,
 {
     let s: Geolocation = Deserialize::deserialize(de)?;
-    // let geolocation: Geolocation = serde_json::from_slice(&s).map_err(|e| {
-    // 	log::info!("\n\n\n ERROR: {:?}\n\n\n", e);
-    // 	Ok(Geolocation {lat: 0, lon: 0})
-    // })?;
-    // geolocation
     Ok(s)
 }
 
