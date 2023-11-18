@@ -13,6 +13,7 @@ fn main() {
     mqtt_client.subscribe(MQTT_TOPIC, QoS::AtLeastOnce).unwrap();
     let sleep_time = Duration::from_secs(1);
 
+                        .publish(MQTT_TOPIC, QoS::AtLeastOnce, false, payload)
     thread::spawn(move || {
         for i in 0..100 {
             let payload = format!("publish {}", i);
