@@ -19,7 +19,7 @@ fn main() {
 
             thread::spawn(move || {
                 for i in 0..100 {
-                    let payload = format!("publish {}", i);
+                    let payload = format!("Publish: {}", i);
 
                     thread::sleep(sleep_time);
 
@@ -30,9 +30,9 @@ fn main() {
             });
 
             for notification in notifications {
-                println!("{:?}", notification)
+                println!("Notification: {:?}", notification)
             }
         }
-        Err(e) => println!("error: {:?}", e),
+        Err(e) => println!("Error: {:?}", e),
     }
 }
