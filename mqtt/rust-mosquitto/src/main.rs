@@ -1,18 +1,25 @@
 use rumqtt::{MqttClient, MqttOptions, QoS};
 use std::{thread, time::Duration};
 
+const MQTT_CLIENT_ID: &str = "test-pubsub1";
+const MQTT_ADDRESS: &str = "localhost";
+const MQTT_PORT: u16 = 1883;
+const MQTT_TOPIC: &str = "bedroom/temperature";
+
 fn main() {
-    let mqtt_options = MqttOptions::new("test-pubsub1", "localhost", 1883);
+    let mqtt_options = MqttOptions::new(MQTT_CLIENT_ID, MQTT_ADDRESS, MQTT_PORT);
     let (mut mqtt_client, notifications) = MqttClient::start(mqtt_options).unwrap();
 
-    mqtt_client.subscribe("bedroom/temperature", QoS::AtLeastOnce).unwrap();
+    mqtt_client.subscribe(MQTT_TOPIC, QoS::AtLeastOnce).unwrap();
     let sleep_time = Duration::from_secs(1);
 
     thread::spawn(move || {
         for i in 0..100 {
             let payload = format!("publish {}", i);
             thread::sleep(sleep_time);
-            mqtt_client.publish("bedroom/temperature", QoS::AtLeastOnce, false, payload).unwrap();
+            mqtt_client
+                .publish("bedroom/temperature", QoS::AtLeastOnce, false, payload)
+                .unwrap();
         }
     });
 
