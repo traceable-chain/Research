@@ -2,7 +2,7 @@ use rumqtt::{MqttClient, MqttOptions, Notification, QoS};
 use std::{thread, time::Duration};
 
 const MQTT_CLIENT_ID: &str = "test-pubsub1";
-const MQTT_ADDRESS: &str = "localhost";
+const MQTT_ADDRESS: &str = "172.17.0.2";
 const MQTT_PORT: u16 = 1883;
 const MQTT_TOPIC: &str = "bedroom/temperature";
 
